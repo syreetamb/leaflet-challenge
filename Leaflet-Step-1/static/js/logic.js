@@ -1,6 +1,6 @@
 var map = L.map("map", {
-    center: [47.1164, -101.2996],
-    zoom: 12,
+    center: [47.1164, -10.2996],
+    zoom: 2,
 
 });
 
@@ -13,31 +13,45 @@ L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/{id}/tiles/{z}/{x}/{y}?acce
   
 var url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson";
 
-// d3.json(url).then(function (response) {
+d3.json(url).then(function ({features}) {
+    data = features
 
-//     var stations = response.data.stations;
+    features.forEach(feature => {
+        var lat = feature.geometry.coordinates[1];
+        var lng = feature.geometry.coordinates[0];
+        var depth = feature.geometry.coordinates[2];
+        var mag = feature.properties.mag;
+        var place = feature.properties.place;
 
-//     var earthQuakes = [];
+        L.circleMarker([lat,lng],
+            {'radius':mag*2,
+            'color':'black',
+            'fillColor':getColor(depth),
+            'fillOpacity':.85,
+            'weight':1
+        }).bindPopup(`Location: ${place}<br>Magnitude: ${mag}`).addTo(map)
+    });
+});
 
-//     // Loop through the stations array
-//     for (var index = 0; index < stations.length; index++) {
-//         var station = stations[index];
+function getColor(depth) {
+    switch (true) {
+        case depth>90:
+            return 'red';
+        case depth>60:
+            return 'yellow';
+        case depth<61:
+            return 'green';
+    }
+}
 
-//         
-//         var earthQuake = L.marker([station.lat, station.lon])
-//         .bindPopup("<h3>" + station.name + "<h3><h3>Capacity: " + station.capacity + "</h3>");
+var legend = L.control({ position: "bottomright" });
+  legend.onAdd = function() {
+    var div = L.DomUtil.create("div", "info legend");
+    div.innerHTML = (
+        '<span style="background:red">>90</span><br>\
+        <span style="background:yellow">>60</span><br>\
+        <span style="background:green"><61</span><br>')
+    return div;
+  };
 
-//         // Add the marker to the bikeMarkers array
-//         earthQuakes.push(earthQuake);
-// }
-
-// L.layerGroup(earthQuakes).addTo(map);
-// }
-
-// var legend = L.control({ position: "bottomright" });
-//   legend.onAdd = function() {
-//     var div = L.DomUtil.create("div", "info legend");
-
-
-
-  
+  legend.addTo(map);
